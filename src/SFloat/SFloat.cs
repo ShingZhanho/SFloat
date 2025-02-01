@@ -34,6 +34,7 @@ public struct SFloat {
                 if (_floatPointIndex != -1) 
                     throw new FormatException("The float contains multiple float points.");
                 _floatPointIndex = _digits.Length - 1;
+                continue;
             }
 
             var digitValue = GetDigitValue(value[i]);
@@ -106,8 +107,13 @@ public struct SFloat {
         var carry         = 0;
         for (var i = -maxFracLength; i < maxIntLength; i++) {
             var sum = GetDigitValue(flt1.GetDigitAt(i)) + GetDigitValue(flt2.GetDigitAt(i)) + carry;
-            result.Insert(0, GetDigitChar(sum - flt1._radix));
-            carry = sum >= flt1._radix ? 1 : 0;
+            if (sum >= flt1._radix) {
+                carry =  1;
+                sum   -= flt1._radix;
+            } else {
+                carry = 0;
+            }
+            result.Insert(0, GetDigitChar(sum));
         }
         
         // Add the carry to the integer part (if any).
@@ -341,10 +347,11 @@ public struct SFloat {
         var chars = new char[_digits.Length + 2];
         if (_isNegative) chars[0] = '-';
         for (var i = 0; i < _digits.Length; i++) {
-            if (i < _floatPointIndex) chars[_isNegative ? i + 1 : i] = _digits[i];    // Before the float point.
-            else if (i == _floatPointIndex) chars[_isNegative ? i + 1 : i] = '.';     // At the float point.
-            else chars[_isNegative ? i + 2 : i + 1] = _digits[i];                     // After the float point.
+            if (i <= _floatPointIndex) chars[_isNegative ? i + 1 : i] = _digits[i];       // Before the float point.
+            if (FractionLength == 0) break;
+            if (i == _floatPointIndex) chars[_isNegative ? i + 1 : i] = '.';             // At the float point.
+            else chars[_isNegative ? i + 2 : i + 1]                        = _digits[i]; // After the float point.
         }
-        return new string(chars);
+        return new string(chars).Trim('\0');
     }
 }
