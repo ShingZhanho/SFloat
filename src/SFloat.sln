@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SFloat", "SFloat.csproj", "{97F7F81D-9D87-4145-89F5-3D11DF3C03B4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SFloat", "SFloat/SFloat.csproj", "{97F7F81D-9D87-4145-89F5-3D11DF3C03B4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

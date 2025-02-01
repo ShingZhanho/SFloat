@@ -46,12 +46,12 @@ public struct SFloat {
         if (_floatPointIndex == -1) _floatPointIndex = _digits.Length - 1;
     }
 
-    private string _digits { get; init; }              // The digits of the float.
-    private int _floatPointIndex { get; init; } = -1;  // The index of the float point.
-                                                       // The index means the position after the index of digit in _digits.
-                                                       // fltPtrIdx = 3 for [5, 7, 3, 4, 2] represents 5734.2
-    private int _radix { get; init; }                  // The radix of the float.
-    private  bool _isNegative { get; init; }           // Whether the float is negative.
+    internal string _digits { get; init; }              // The digits of the float.
+    internal int _floatPointIndex { get; init; } = -1;  // The index of the float point.
+                                                        // The index means the position after the index of digit in _digits.
+                                                        // fltPtrIdx = 3 for [5, 7, 3, 4, 2] represents 5734.2
+    internal int _radix { get; init; }                  // The radix of the float.
+    internal bool _isNegative { get; init; }            // Whether the float is negative.
     
     private static int GetDigitValue(char digit) {
         // Get the value of the digit. Maximum supported radix: 36.
@@ -135,6 +135,7 @@ public struct SFloat {
     public static SFloat operator -(SFloat flt1, SFloat flt2) {
         // Handle negative numbers. flt1 must be greater than flt2 for subtraction.
         // Both operands must be positive.
+        if (flt1 == flt2) return new SFloat("0", flt1._radix);
         if (!flt1._isNegative && flt2._isNegative) return flt1 + -flt2;
         if (flt1._isNegative && !flt2._isNegative) return -(-flt1 + flt2);
         if (flt1._isNegative && flt2._isNegative) {
@@ -249,6 +250,15 @@ public struct SFloat {
     
     public static bool operator <=(SFloat flt1, SFloat flt2) {
         return flt1 < flt2 || flt1 == flt2;
+    }
+
+    public static SFloat operator *(SFloat flt, int factor) {
+        var result = flt;
+        for (var i = 0; i < factor; i++) {
+            result += flt;
+        }
+
+        return result;
     }
 
     public int FractionLength {
