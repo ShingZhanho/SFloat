@@ -18,57 +18,59 @@ public struct SFloat {
         radix ??= 10;
         if (radix < 2 || radix > 36) 
             throw new ArgumentOutOfRangeException(nameof(radix), "The radix must be in the range of 2 to 36.");
-        _radix  = radix.Value;
-        _digits = "";
+        Radix  = radix.Value;
+        Digits = "";
         value   = value.ToUpperInvariant();
         
         // Parse digits.
-        var digitUpperBound = _radix - 1;
+        var digitUpperBound = Radix - 1;
         for (var i = 0; i < value.Length; i++) {
             if (i == 0 && value[i] == '-') {    // Check for negative sign.
-                _isNegative = true;
+                IsNegative = true;
                 continue;
             }
 
             if (value[i] == '.') {              // Check for float point.
-                if (_floatPointIndex != -1) 
+                if (FloatPointIndex != -1) 
                     throw new FormatException("The float contains multiple float points.");
-                _floatPointIndex = _digits.Length - 1;
+                FloatPointIndex = Digits.Length - 1;
                 continue;
             }
 
             var digitValue = GetDigitValue(value[i]);
             if (digitValue < 0 || digitValue > digitUpperBound)  // Check for invalid digit.
                 throw new FormatException("The float contains invalid digits.");
-            _digits += value[i];
+            Digits += value[i];
         }
         
         // If no float point is found, set it to the end of the float.
-        if (_floatPointIndex == -1) _floatPointIndex = _digits.Length - 1;
+        if (FloatPointIndex == -1) FloatPointIndex = Digits.Length - 1;
         
-        // Remove leading zeros.
-        while (_digits.Length > 1 && _digits[0] == '0') {
-            _digits = _digits[1..];
-            _floatPointIndex--;
+        // Remove leading zeros of integer part.
+        for (var i = 0; i < IntegerLength; i++) {
+            if (Digits[i] != '0' || IntegerLength == 1) break;
+            Digits = Digits[1..];
+            FloatPointIndex--;
         }
         
         // Remove trailing zeros at fractional part.
-        if (_floatPointIndex != _digits.Length - 1) {
-            while (_digits.Length > 1 && _digits[^1] == '0') {
-                _digits = _digits[..^1];
-            }
+        for (var i = Digits.Length - 1; i > FloatPointIndex; i--) {
+            if (Digits[i] != '0') break;
+            Digits = Digits[..^1];
         }
         
         // If the float is zero, set it to positive.
-        if (_digits == "0") _isNegative = false;
+        if (Digits == "0") IsNegative = false;
     }
+    
+    public static implicit operator SFloat(string s) => new (s);
 
-    internal string _digits { get; init; }              // The digits of the float.
-    internal int _floatPointIndex { get; init; } = -1;  // The index of the float point.
+    internal string Digits { get; init; }              // The digits of the float.
+    internal int FloatPointIndex { get; init; } = -1;  // The index of the float point.
                                                         // The index means the position after the index of digit in _digits.
                                                         // fltPtrIdx = 3 for [5, 7, 3, 4, 2] represents 5734.2
-    internal int _radix { get; init; }                  // The radix of the float.
-    internal bool _isNegative { get; init; }            // Whether the float is negative.
+    internal int Radix { get; init; }                  // The radix of the float.
+    internal bool IsNegative { get; init; }            // Whether the float is negative.
     
     private static int GetDigitValue(char digit) {
         // Get the value of the digit. Maximum supported radix: 36.
@@ -96,29 +98,31 @@ public struct SFloat {
                          int?    radix           = null,
                          bool?   isNegative      = null) {
         return new SFloat {
-            _digits          = digits ?? _digits,
-            _floatPointIndex = floatPointIndex ?? _floatPointIndex,
-            _radix           = radix ?? _radix,
-            _isNegative      = isNegative ?? _isNegative
+            Digits          = digits ?? Digits,
+            FloatPointIndex = floatPointIndex ?? FloatPointIndex,
+            Radix           = radix ?? Radix,
+            IsNegative      = isNegative ?? IsNegative
         };
     }
+    
+    public static readonly SFloat Zero = new SFloat("0");
 
     public static SFloat operator -(SFloat flt) {
-        return flt.Clone(isNegative: !flt._isNegative);
+        return flt.Clone(isNegative: !flt.IsNegative);
     }
 
     public static SFloat operator +(SFloat flt1, SFloat flt2) {
         // Optimization: If one of the operands is zero, return the other operand.
-        if (flt1._digits == "0") return flt2;
-        if (flt2._digits == "0") return flt1;
+        if (flt1.Digits == "0") return flt2;
+        if (flt2.Digits == "0") return flt1;
         
         // Handle negative numbers. Two operands must be positive for addition.
-        if (flt1._isNegative && !flt2._isNegative) return flt2 - -flt1;
-        if (!flt1._isNegative && flt2._isNegative) return flt1 - -flt2;
-        if (flt1._isNegative && flt2._isNegative) return -(-flt1 + -flt2);
+        if (flt1.IsNegative && !flt2.IsNegative) return flt2 - -flt1;
+        if (!flt1.IsNegative && flt2.IsNegative) return flt1 - -flt2;
+        if (flt1.IsNegative && flt2.IsNegative) return -(-flt1 + -flt2);
         
         // Handle mismatched radix. Always convert to the radix of the first operand.
-        if (flt1._radix != flt2._radix) flt2 = flt2.ToDecimal().ToRadix(flt1._radix);
+        if (flt1.Radix != flt2.Radix) flt2 = flt2.ToDecimal().ToRadix(flt1.Radix);
         
         // Addition
         var result        = new List<char>();
@@ -127,9 +131,9 @@ public struct SFloat {
         var carry         = 0;
         for (var i = -maxFracLength; i < maxIntLength; i++) {
             var sum = GetDigitValue(flt1.GetDigitAt(i)) + GetDigitValue(flt2.GetDigitAt(i)) + carry;
-            if (sum >= flt1._radix) {
+            if (sum >= flt1.Radix) {
                 carry =  1;
-                sum   -= flt1._radix;
+                sum   -= flt1.Radix;
             } else {
                 carry = 0;
             }
@@ -143,10 +147,10 @@ public struct SFloat {
         }
 
         return new SFloat {
-            _digits          = new string(result.ToArray()),
-            _floatPointIndex = maxIntLength - 1,
-            _radix           = flt1._radix,
-            _isNegative      = false
+            Digits          = new string(result.ToArray()),
+            FloatPointIndex = maxIntLength - 1,
+            Radix           = flt1.Radix,
+            IsNegative      = false
         };
     }
     
@@ -160,25 +164,25 @@ public struct SFloat {
     
     public static SFloat operator -(SFloat flt1, SFloat flt2) {
         // Optimisation: if the first operand is zero, return the negation of the second operand.
-        if (flt1._digits == "0") return -flt2;
+        if (flt1.Digits == "0") return -flt2;
         // if the second operand is zero, return the first operand.
-        if (flt2._digits == "0") return flt1;
+        if (flt2.Digits == "0") return flt1;
         
         // Handle negative numbers. flt1 must be greater than flt2 for subtraction.
         // Both operands must be positive.
-        if (flt1 == flt2) return new SFloat("0", flt1._radix);
-        if (!flt1._isNegative && flt2._isNegative) return flt1 + -flt2;
-        if (flt1._isNegative && !flt2._isNegative) return -(-flt1 + flt2);
-        if (flt1._isNegative && flt2._isNegative) {
+        if (flt1 == flt2) return new SFloat("0", flt1.Radix);
+        if (!flt1.IsNegative && flt2.IsNegative) return flt1 + -flt2;
+        if (flt1.IsNegative && !flt2.IsNegative) return -(-flt1 + flt2);
+        if (flt1.IsNegative && flt2.IsNegative) {
             if (-flt1 < -flt2) return -flt2 - -flt1;
             if (-flt1 > -flt2) return -(-flt1 - -flt2);
         }
-        if (!flt1._isNegative && !flt2._isNegative) {
+        if (!flt1.IsNegative && !flt2.IsNegative) {
             if (flt1 < flt2) return -(flt2 - flt1);
         }
         
         // Handle mismatched radix. Always convert to the radix of the first operand.
-        if (flt1._radix != flt2._radix) flt2 = flt2.ToDecimal().ToRadix(flt1._radix);
+        if (flt1.Radix != flt2.Radix) flt2 = flt2.ToDecimal().ToRadix(flt1.Radix);
         
         // Subtraction
         var result        = new List<char>();
@@ -193,27 +197,27 @@ public struct SFloat {
         for (var i = -maxFracLength; i < maxIntLength; i++) {
             var diff = digits[i, 0] - digits[i, 1];
             if (diff < 0) {
-                diff += flt1._radix;
+                diff += flt1.Radix;
                 digits[i + 1, 0]--;
             }
             result.Insert(0, GetDigitChar(diff));
         }
         
         return new SFloat {
-            _digits          = new string(result.ToArray()),
-            _floatPointIndex = maxIntLength - 1,
-            _radix           = flt1._radix,
-            _isNegative      = false
+            Digits          = new string(result.ToArray()),
+            FloatPointIndex = maxIntLength - 1,
+            Radix           = flt1.Radix,
+            IsNegative      = false
         };
     }
     
     public static bool operator >(SFloat flt1, SFloat flt2) {
         // Handle different signs.
-        if (flt1._isNegative && !flt2._isNegative) return false;
-        if (!flt1._isNegative && flt2._isNegative) return true;
+        if (flt1.IsNegative && !flt2.IsNegative) return false;
+        if (!flt1.IsNegative && flt2.IsNegative) return true;
         
         // If the operands have different radix, convert both to decimal.
-        if (flt1._radix != flt2._radix) {
+        if (flt1.Radix != flt2.Radix) {
             flt1 = flt1.ToDecimal();
             flt2 = flt2.ToDecimal();
         }
@@ -238,10 +242,10 @@ public struct SFloat {
 
     public static bool operator ==(SFloat flt1, SFloat flt2) {
         // Handle different signs.
-        if (flt1._isNegative != flt2._isNegative) return false;
+        if (flt1.IsNegative != flt2.IsNegative) return false;
         
         // If the operands have different radix, convert both to decimal.
-        if (flt1._radix != flt2._radix) {
+        if (flt1.Radix != flt2.Radix) {
             flt1 = flt1.ToDecimal();
             flt2 = flt2.ToDecimal();
         }
@@ -262,8 +266,8 @@ public struct SFloat {
     
     public static bool operator <(SFloat flt1, SFloat flt2) {
         // Handle different signs.
-        if (flt1._isNegative && !flt2._isNegative) return true;
-        if (!flt1._isNegative && flt2._isNegative) return false;
+        if (flt1.IsNegative && !flt2.IsNegative) return true;
+        if (!flt1.IsNegative && flt2.IsNegative) return false;
         
         // Compare digit by digit.
         var maxFracLength = Math.Max(flt1.FractionLength, flt2.FractionLength);
@@ -298,15 +302,15 @@ public struct SFloat {
 
     public int FractionLength {
         get {
-            if (_floatPointIndex == -1) return 0;
-            return _digits.Length - _floatPointIndex - 1;
+            if (FloatPointIndex == -1) return 0;
+            return Digits.Length - FloatPointIndex - 1;
         }
     }
     
     public int IntegerLength {
         get {
-            if (_floatPointIndex == -1) return _digits.Length;
-            return _floatPointIndex + 1;
+            if (FloatPointIndex == -1) return Digits.Length;
+            return FloatPointIndex + 1;
         }
     }
 
@@ -325,14 +329,14 @@ public struct SFloat {
     public char GetDigitAt(int index) {
         // Integral part (index >= 0)
         if (index >= 0)
-            return index >= IntegerLength ? '0' : _digits[IntegerLength - index - 1];
+            return index >= IntegerLength ? '0' : Digits[IntegerLength - index - 1];
         
         // Fractional part (index < 0)
-        return -index > FractionLength ? '0' : _digits[IntegerLength - index - 1];
+        return -index > FractionLength ? '0' : Digits[IntegerLength - index - 1];
     }
 
     public SFloat SetDigitAt(int index, int value) {
-        if (value < 0 || value >= _radix)
+        if (value < 0 || value >= Radix)
             throw new ArgumentOutOfRangeException(nameof(value),
                 "The value must be in the range of 0 to the maximally supported value by the radix.");
         var c = GetDigitChar(value);
@@ -340,13 +344,13 @@ public struct SFloat {
             throw new ArgumentOutOfRangeException(nameof(value),
                 "The value must be in the range of 0 to the maximally supported value by the radix.");
 
-        var digits          = _digits.ToCharArray();
-        var floatPointIndex = _floatPointIndex;
+        var digits          = Digits.ToCharArray();
+        var floatPointIndex = FloatPointIndex;
 
         switch (index) {
             // Integral part (index >= 0)
             case >= 0 when index < IntegerLength:
-                digits[index - IntegerLength + 1] = c;
+                digits[IntegerLength - index - 1] = c;
                 break;
             // extend the integral part when needed
             case >= 0 when index >= IntegerLength: {
@@ -354,7 +358,7 @@ public struct SFloat {
                     digits = zeroChar.Concat(digits).ToArray();
                     floatPointIndex++;
                 }
-                return SetDigitAt(index, value);
+                return new SFloat(new string(new[] { c }.Concat(digits).ToArray()), Radix);
             }
             // Fraction part (index < 0)
             case < 0 when -index <= FractionLength:
@@ -365,7 +369,7 @@ public struct SFloat {
                 while (-index > FractionLength) {
                     digits = digits.Concat(zeroChar).ToArray();
                 }
-                return SetDigitAt(index, value);
+                return new SFloat(new string(digits.Concat([c]).ToArray()), Radix);
             }
         }
         
@@ -378,12 +382,12 @@ public struct SFloat {
             intChars[IntegerLength - i - 1] = GetDigitAt(i);
         }
         if (FractionLength == 0)
-            return $"{(_isNegative ? "-" : "")}{new string(intChars)}";
+            return $"{(IsNegative ? "-" : "")}{new string(intChars)}";
         
         var fracChars = new char[FractionLength];
         for (var i = 1; i <= FractionLength; i++) {
             fracChars[i - 1] = GetDigitAt(-i);
         }
-        return $"{(_isNegative ? "-" : "")}{new string(intChars)}.{new string(fracChars)}";
+        return $"{(IsNegative ? "-" : "")}{new string(intChars)}.{new string(fracChars)}";
     }
 }
