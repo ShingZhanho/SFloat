@@ -300,21 +300,11 @@ public struct SFloat {
         return flt * factor;
     }
 
-    public int FractionLength {
-        get {
-            if (FloatPointIndex == -1) return 0;
-            return Digits.Length - FloatPointIndex - 1;
-        }
-    }
-    
-    public int IntegerLength {
-        get {
-            if (FloatPointIndex == -1) return Digits.Length;
-            return FloatPointIndex + 1;
-        }
-    }
+    public int FractionLength => Digits.Length - FloatPointIndex - 1;
 
-    private static readonly char[] zeroChar = new [] { '0' };
+    public int IntegerLength => FloatPointIndex + 1;
+
+    private static readonly char[] ZeroChar = ['0'];
 
     /// <summary>
     /// Gets the digit at the specified index.
@@ -346,34 +336,60 @@ public struct SFloat {
 
         var digits          = Digits.ToCharArray();
         var floatPointIndex = FloatPointIndex;
+        
+        int fracLength = FractionLength, intLength = IntegerLength;
 
         switch (index) {
             // Integral part (index >= 0)
-            case >= 0 when index < IntegerLength:
-                digits[IntegerLength - index - 1] = c;
+            case >= 0 when index < intLength:
+                digits[intLength - index - 1] = c;
                 break;
+            
             // extend the integral part when needed
-            case >= 0 when index >= IntegerLength: {
-                while (index >= IntegerLength) {
-                    digits = zeroChar.Concat(digits).ToArray();
+            case >= 0 when index >= intLength: 
+                while (index >= intLength) {
+                    digits = ZeroChar.Concat(digits).ToArray();
+                    intLength++;
                     floatPointIndex++;
                 }
-                return new SFloat(new string(new[] { c }.Concat(digits).ToArray()), Radix);
-            }
-            // Fraction part (index < 0)
-            case < 0 when -index <= FractionLength:
-                digits[IntegerLength - index - 1] = c;
+
+                digits[intLength - index - 1] = c;
                 break;
+            
+            // Fraction part (index < 0)
+            case < 0 when -index <= fracLength:
+                digits[intLength - index - 1] = c;
+                break;
+            
             // extend the fraction part when needed
-            case < 0 when -index > FractionLength: {
-                while (-index > FractionLength) {
-                    digits = digits.Concat(zeroChar).ToArray();
+            case < 0 when -index > fracLength: 
+                while (-index > fracLength) {
+                    digits = digits.Concat(ZeroChar).ToArray();
+                    fracLength++;
                 }
-                return new SFloat(new string(digits.Concat([c]).ToArray()), Radix);
-            }
+
+                digits[intLength - index - 1] = c;
+                break;
         }
-        
-        return Clone(digits: new string(digits), floatPointIndex: floatPointIndex);
+        var str = new string(digits);
+        if (floatPointIndex != str.Length - 1)
+            str = str[..(floatPointIndex + 1)] + "." + str[(floatPointIndex + 1)..];
+        if (IsNegative) str = "-" + str;
+        return new SFloat(str, Radix);
+    }
+
+    /// <summary>
+    /// Extracts the digit at the specified index while pertains its positional value.
+    /// For example, SFloat("123.45", 10).ExtractDigitAt(-2) returns "0.05".
+    /// </summary>
+    /// <param name="index">
+    /// The index of the digit to be extracted. 0 means the one's place (rightmost digit before the float point).
+    /// -1 means the tenths place (leftmost digit after the float point).
+    /// </param>
+    /// <returns>The SFloat representation of the extracted digit. 0 if index is out of range.</returns>
+    public SFloat ExtractDigitAt(int index) {
+        var rtn = Zero;
+        return rtn.SetDigitAt(index, GetDigitValue(GetDigitAt(index)));
     }
 
     public override string ToString() {
