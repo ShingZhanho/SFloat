@@ -344,16 +344,6 @@ public struct SFloat {
     }
 
     public override string ToString() {
-        // var chars = new char[_digits.Length + 2];
-        // if (_isNegative) chars[0] = '-';
-        // for (var i = 0; i < _digits.Length; i++) {
-        //     if (i <= _floatPointIndex) chars[_isNegative ? i + 1 : i] = _digits[i];       // Before the float point.
-        //     if (i == _floatPointIndex && FractionLength == 0) break;
-        //     if (i == _floatPointIndex) chars[_isNegative ? i + 1 : i] = '.';             // At the float point.
-        //     else chars[_isNegative ? i + 2 : i + 1]                        = _digits[i]; // After the float point.
-        // }
-        // return new string(chars).Trim('\0');
-
         var intChars = new char[IntegerLength];
         for (var i = IntegerLength - 1; i >= 0; i--) {
             intChars[IntegerLength - i - 1] = GetDigitAt(i);
