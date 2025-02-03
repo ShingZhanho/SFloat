@@ -296,7 +296,7 @@ public struct SFloat {
     public char GetDigitAt(int index) {
         // Integral part (index >= 0)
         if (index >= 0)
-            return index > IntegerLength - 1 ? '0' : _digits[index - IntegerLength + 1];
+            return index >= IntegerLength ? '0' : _digits[IntegerLength - index - 1];
         
         // Fractional part (index < 0)
         return -index > FractionLength ? '0' : _digits[IntegerLength - index - 1];
