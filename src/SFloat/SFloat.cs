@@ -45,6 +45,22 @@ public struct SFloat {
         
         // If no float point is found, set it to the end of the float.
         if (_floatPointIndex == -1) _floatPointIndex = _digits.Length - 1;
+        
+        // Remove leading zeros.
+        while (_digits.Length > 1 && _digits[0] == '0') {
+            _digits = _digits[1..];
+            _floatPointIndex--;
+        }
+        
+        // Remove trailing zeros at fractional part.
+        if (_floatPointIndex != _digits.Length - 1) {
+            while (_digits.Length > 1 && _digits[^1] == '0') {
+                _digits = _digits[..^1];
+            }
+        }
+        
+        // If the float is zero, set it to positive.
+        if (_digits == "0") _isNegative = false;
     }
 
     internal string _digits { get; init; }              // The digits of the float.
@@ -92,6 +108,10 @@ public struct SFloat {
     }
 
     public static SFloat operator +(SFloat flt1, SFloat flt2) {
+        // Optimization: If one of the operands is zero, return the other operand.
+        if (flt1._digits == "0") return flt2;
+        if (flt2._digits == "0") return flt1;
+        
         // Handle negative numbers. Two operands must be positive for addition.
         if (flt1._isNegative && !flt2._isNegative) return flt2 - -flt1;
         if (!flt1._isNegative && flt2._isNegative) return flt1 - -flt2;
@@ -139,6 +159,11 @@ public struct SFloat {
     }
     
     public static SFloat operator -(SFloat flt1, SFloat flt2) {
+        // Optimisation: if the first operand is zero, return the negation of the second operand.
+        if (flt1._digits == "0") return -flt2;
+        // if the second operand is zero, return the first operand.
+        if (flt2._digits == "0") return flt1;
+        
         // Handle negative numbers. flt1 must be greater than flt2 for subtraction.
         // Both operands must be positive.
         if (flt1 == flt2) return new SFloat("0", flt1._radix);
@@ -265,6 +290,10 @@ public struct SFloat {
         }
 
         return result;
+    }
+    
+    public static SFloat operator *(int factor, SFloat flt) {
+        return flt * factor;
     }
 
     public int FractionLength {
