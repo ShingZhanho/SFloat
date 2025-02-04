@@ -88,7 +88,7 @@ public struct SFloat {
     public const int MAX_SUPPORTED_FRAC_LENGTH = 1073741823;    // The maximum length of the fractional part.
     public const int MAX_DEFAULT_FRAC_LENGTH = 32;              // The default maximum length of the fractional part.
     
-    private static int GetDigitValue(char digit) {
+    internal static int GetDigitValue(char digit) {
         // Get the value of the digit. Maximum supported radix: 36.
         // Returns -1 if the digit is invalid.
         return digit switch {
@@ -99,7 +99,7 @@ public struct SFloat {
         };
     }
     
-    private static char GetDigitChar(int value) {
+    internal static char GetDigitChar(int value) {
         // Get the character of the digit. Maximum supported radix: 36.
         // Returns '\0' if the value is invalid.
         return value switch {
@@ -269,6 +269,12 @@ public struct SFloat {
     }
 
     public static bool operator ==(SFloat flt1, SFloat flt2) {
+        // Optimise for zero checking:
+        //    If the Zero is on the right hand side, use a faster method without converting to decimal.
+        //    Perform ordinary check if Zero is on the left hand side.
+        if (flt2 is { IntegerLength: 1, FractionLength: 0 } && flt2.GetDigitAt(0) == '0')
+            return flt1 is { IntegerLength: 1, FractionLength: 0 } && flt1.GetDigitAt(0) == '0';
+        
         // Handle different signs.
         if (flt1.IsNegative != flt2.IsNegative) return false;
         
@@ -353,6 +359,25 @@ public struct SFloat {
         
         // Fractional part (index < 0)
         return -index > FractionLength ? '0' : Digits[IntegerLength - index - 1];
+    }
+
+    public char[] GetDigitsIn(int? start = null, int? end = null) {
+        start ??= IntegerLength - 1;
+        end  ??= -FractionLength;
+        if (start < end) return [];
+        var rtn = new char[start.Value - end.Value + 1];
+        for (var i = start.Value; i >= end.Value; i--) {
+            rtn[start.Value - i] = GetDigitAt(i);
+        }
+        return rtn;
+    }
+
+    public char[] GetIntegerDigits() {
+        return GetDigitsIn(IntegerLength - 1, 0);
+    }
+    
+    public char[] GetFractionalDigits() {
+        return FractionLength == 0 ? [] : GetDigitsIn(-1, -FractionLength);
     }
 
     /// <summary>
