@@ -6,7 +6,6 @@ namespace SFloat;
 /// A float value that is string-based.
 /// </summary>
 public struct SFloat {
-    
     /// <summary>
     /// Creates a new SFloat from a string. The float automatically gets the radix of the string.
     /// </summary>
@@ -14,12 +13,20 @@ public struct SFloat {
     /// <param name="radix">
     /// The radix (base) to interpret the digits. The valid range is 2 to 36. Default is 10.
     /// </param>
-    public SFloat(string value, int? radix = null) {
+    /// <param name="maxFractionLength">
+    /// The maximum length of the fractional part. Default is <see cref="MAX_SUPPORTED_FRAC_LENGTH"/>.
+    /// </param>
+    public SFloat(string value, int? radix = null, int? maxFractionLength = null) {
         radix ??= 10;
         if (radix < 2 || radix > 36) 
             throw new ArgumentOutOfRangeException(nameof(radix), "The radix must be in the range of 2 to 36.");
+        maxFractionLength ??= MAX_SUPPORTED_FRAC_LENGTH;
+        if (maxFractionLength < 0 || maxFractionLength > MAX_SUPPORTED_FRAC_LENGTH)
+            throw new ArgumentOutOfRangeException(nameof(maxFractionLength),
+                $"The maximum fraction length must be in the range of 0 to {MAX_SUPPORTED_FRAC_LENGTH}.");
         Radix  = radix.Value;
         Digits = "";
+        MaxFractionLength = maxFractionLength.Value;
         value   = value.ToUpperInvariant();
         
         // Parse digits.
@@ -71,6 +78,9 @@ public struct SFloat {
                                                         // fltPtrIdx = 3 for [5, 7, 3, 4, 2] represents 5734.2
     internal int Radix { get; init; }                  // The radix of the float.
     internal bool IsNegative { get; init; }            // Whether the float is negative.
+    internal int MaxFractionLength { get; init; }
+
+    public const int MAX_SUPPORTED_FRAC_LENGTH = 1073741823;    // The maximum length of the fractional part.
     
     private static int GetDigitValue(char digit) {
         // Get the value of the digit. Maximum supported radix: 36.
@@ -93,19 +103,29 @@ public struct SFloat {
         };
     }
 
-    private SFloat Clone(string? digits          = null,
-                         int?    floatPointIndex = null,
-                         int?    radix           = null,
-                         bool?   isNegative      = null) {
+    private SFloat Clone(string? digits            = null,
+                         int?    floatPointIndex   = null,
+                         int?    radix             = null,
+                         bool?   isNegative        = null,
+                         int?    maxFractionLength = null) {
         return new SFloat {
-            Digits          = digits ?? Digits,
-            FloatPointIndex = floatPointIndex ?? FloatPointIndex,
-            Radix           = radix ?? Radix,
-            IsNegative      = isNegative ?? IsNegative
+            Digits            = digits ?? Digits,
+            FloatPointIndex   = floatPointIndex ?? FloatPointIndex,
+            Radix             = radix ?? Radix,
+            IsNegative        = isNegative ?? IsNegative,
+            MaxFractionLength = maxFractionLength ?? MaxFractionLength
         };
     }
+
+    public static readonly SFloat Zero = new ("0");
+
+    public static bool operator true(SFloat flt) {
+        return flt != Zero;
+    }
     
-    public static readonly SFloat Zero = new SFloat("0");
+    public static bool operator false(SFloat flt) {
+        return flt == Zero;
+    }
 
     public static SFloat operator -(SFloat flt) {
         return flt.Clone(isNegative: !flt.IsNegative);
@@ -113,8 +133,8 @@ public struct SFloat {
 
     public static SFloat operator +(SFloat flt1, SFloat flt2) {
         // Optimization: If one of the operands is zero, return the other operand.
-        if (flt1.Digits == "0") return flt2;
-        if (flt2.Digits == "0") return flt1;
+        if (flt1 == Zero) return flt2;
+        if (flt2 == Zero) return flt1;
         
         // Handle negative numbers. Two operands must be positive for addition.
         if (flt1.IsNegative && !flt2.IsNegative) return flt2 - -flt1;
@@ -325,6 +345,15 @@ public struct SFloat {
         return -index > FractionLength ? '0' : Digits[IntegerLength - index - 1];
     }
 
+    /// <summary>
+    /// Sets the digit at the specified index. The operation is NOT in-place. A new SFloat is returned.
+    /// </summary>
+    /// <param name="index">The index of digit to be set.</param>
+    /// <param name="value">The value of the digit to be set.</param>
+    /// <returns>The new SFloat with the digit set.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// Thrown when the value is out of range of 0 to the maximally supported value by the radix.
+    /// </exception>
     public SFloat SetDigitAt(int index, int value) {
         if (value < 0 || value >= Radix)
             throw new ArgumentOutOfRangeException(nameof(value),
@@ -377,6 +406,21 @@ public struct SFloat {
         if (IsNegative) str = "-" + str;
         return new SFloat(str, Radix);
     }
+    
+    /// <summary>
+    /// Sets the digit at the specified index. The operation is NOT in-place. A new SFloat is returned.
+    /// </summary>
+    /// <param name="index">The index of digit to be set.</param>
+    /// <param name="value">The value of the digit to be set.</param>
+    /// <returns>The new SFloat with the digit set.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// Thrown when the digit is out of range of 0 to the maximally supported value by the radix.
+    /// </exception>
+    public SFloat SetDigitAt(int index, char value) {
+        if (GetDigitValue(value) == -1)
+            throw new ArgumentOutOfRangeException(nameof(value), "The value must be a valid digit.");
+        return SetDigitAt(index, GetDigitValue(value));
+    }
 
     /// <summary>
     /// Extracts the digit at the specified index while pertains its positional value.
@@ -390,6 +434,17 @@ public struct SFloat {
     public SFloat ExtractDigitAt(int index) {
         var rtn = Zero;
         return rtn.SetDigitAt(index, GetDigitValue(GetDigitAt(index)));
+    }
+
+    public static bool TryParse(string s, out SFloat result, int? radix = null) {
+        radix ??= 10;
+        try {
+            result = new SFloat(s, radix.Value);
+            return true;
+        } catch {
+            result = Zero;
+            return false;
+        }
     }
 
     public override string ToString() {
