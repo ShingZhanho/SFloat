@@ -14,13 +14,14 @@ public struct SFloat {
     /// The radix (base) to interpret the digits. The valid range is 2 to 36. Default is 10.
     /// </param>
     /// <param name="maxFractionLength">
-    /// The maximum length of the fractional part. Default is <see cref="MAX_SUPPORTED_FRAC_LENGTH"/>.
+    /// The maximum length of the fractional part. Default is <see cref="MAX_DEFAULT_FRAC_LENGTH"/>.
+    /// The value must not be negative and must not exceed <see cref="MAX_SUPPORTED_FRAC_LENGTH"/>.
     /// </param>
     public SFloat(string value, int? radix = null, int? maxFractionLength = null) {
         radix ??= 10;
         if (radix < 2 || radix > 36) 
             throw new ArgumentOutOfRangeException(nameof(radix), "The radix must be in the range of 2 to 36.");
-        maxFractionLength ??= MAX_SUPPORTED_FRAC_LENGTH;
+        maxFractionLength ??= MAX_DEFAULT_FRAC_LENGTH;
         if (maxFractionLength < 0 || maxFractionLength > MAX_SUPPORTED_FRAC_LENGTH)
             throw new ArgumentOutOfRangeException(nameof(maxFractionLength),
                 $"The maximum fraction length must be in the range of 0 to {MAX_SUPPORTED_FRAC_LENGTH}.");
@@ -31,6 +32,7 @@ public struct SFloat {
         
         // Parse digits.
         var digitUpperBound = Radix - 1;
+        var fracDigitsCtr   = 0;
         for (var i = 0; i < value.Length; i++) {
             if (i == 0 && value[i] == '-') {    // Check for negative sign.
                 IsNegative = true;
@@ -48,6 +50,9 @@ public struct SFloat {
             if (digitValue < 0 || digitValue > digitUpperBound)  // Check for invalid digit.
                 throw new FormatException("The float contains invalid digits.");
             Digits += value[i];
+            if (FloatPointIndex == -1) continue;
+            fracDigitsCtr++;
+            if (fracDigitsCtr == MaxFractionLength) break;  // Truncate the fractional part if too long.
         }
         
         // If no float point is found, set it to the end of the float.
@@ -81,6 +86,7 @@ public struct SFloat {
     internal int MaxFractionLength { get; init; }
 
     public const int MAX_SUPPORTED_FRAC_LENGTH = 1073741823;    // The maximum length of the fractional part.
+    public const int MAX_DEFAULT_FRAC_LENGTH = 32;              // The default maximum length of the fractional part.
     
     private static int GetDigitValue(char digit) {
         // Get the value of the digit. Maximum supported radix: 36.
@@ -167,10 +173,11 @@ public struct SFloat {
         }
 
         return new SFloat {
-            Digits          = new string(result.ToArray()),
-            FloatPointIndex = maxIntLength - 1,
-            Radix           = flt1.Radix,
-            IsNegative      = false
+            Digits            = new string(result.ToArray()),
+            FloatPointIndex   = maxIntLength - 1,
+            Radix             = flt1.Radix,
+            IsNegative        = false,
+            MaxFractionLength = Math.Max(flt1.MaxFractionLength, flt2.MaxFractionLength)
         };
     }
     
@@ -222,12 +229,13 @@ public struct SFloat {
             }
             result.Insert(0, GetDigitChar(diff));
         }
-        
+
         return new SFloat {
-            Digits          = new string(result.ToArray()),
-            FloatPointIndex = maxIntLength - 1,
-            Radix           = flt1.Radix,
-            IsNegative      = false
+            Digits            = new string(result.ToArray()),
+            FloatPointIndex   = maxIntLength - 1,
+            Radix             = flt1.Radix,
+            IsNegative        = false,
+            MaxFractionLength = Math.Max(flt1.MaxFractionLength, flt2.MaxFractionLength)
         };
     }
     
@@ -320,9 +328,11 @@ public struct SFloat {
         return flt * factor;
     }
 
-    public int FractionLength => Digits.Length - FloatPointIndex - 1;
+    public int FractionLength => Math.Min(Digits.Length - FloatPointIndex - 1, MaxFractionLength);
 
     public int IntegerLength => FloatPointIndex + 1;
+    
+    public bool IsInteger => FractionLength == 0;
 
     private static readonly char[] ZeroChar = ['0'];
 
