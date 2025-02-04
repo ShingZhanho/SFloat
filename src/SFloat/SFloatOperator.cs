@@ -32,7 +32,7 @@ public readonly partial struct SFloat {
         if (flt1.IsNegative && flt2.IsNegative) return -(-flt1 + -flt2);
         
         // Handle mismatched radix. Always convert to the radix of the first operand.
-        if (flt1.Radix != flt2.Radix) flt2 = flt2.ToDecimal().ToRadix(flt1.Radix);
+        if (flt1.Radix != flt2.Radix) flt2 = flt2.ToRadix(flt1.Radix);
         
         // Addition
         var result        = new List<char>();
@@ -93,7 +93,7 @@ public readonly partial struct SFloat {
         }
         
         // Handle mismatched radix. Always convert to the radix of the first operand.
-        if (flt1.Radix != flt2.Radix) flt2 = flt2.ToDecimal().ToRadix(flt1.Radix);
+        if (flt1.Radix != flt2.Radix) flt2 = flt2.ToRadix(flt1.Radix);
         
         // Subtraction
         var result        = new List<char>();
@@ -124,6 +124,9 @@ public readonly partial struct SFloat {
     }
     
     public static bool operator >(SFloat flt1, SFloat flt2) {
+        // Handle zero comparison
+        if (flt2 is {IntegerLength: 1, FractionLength: 0} && flt2.Digits[0] == '0') return !flt1.IsNegative;
+        
         // Handle different signs.
         if (flt1.IsNegative && !flt2.IsNegative) return false;
         if (!flt1.IsNegative && flt2.IsNegative) return true;
@@ -133,6 +136,8 @@ public readonly partial struct SFloat {
             flt1 = flt1.ToDecimal();
             flt2 = flt2.ToDecimal();
         }
+        
+        if (flt1 == flt2) return false;
         
         // Compare digit by digit.
         var maxFracLength = Math.Max(flt1.FractionLength, flt2.FractionLength);
@@ -184,9 +189,20 @@ public readonly partial struct SFloat {
     }
     
     public static bool operator <(SFloat flt1, SFloat flt2) {
+        // Handle zero comparison
+        if (flt2 is {IntegerLength: 1, FractionLength: 0} && flt1.Digits[0] == '0') return flt2.IsNegative;
+        
         // Handle different signs.
         if (flt1.IsNegative && !flt2.IsNegative) return true;
         if (!flt1.IsNegative && flt2.IsNegative) return false;
+        
+        // If the operands have different radix, convert both to decimal.
+        if (flt1.Radix != flt2.Radix) {
+            flt1 = flt1.ToDecimal();
+            flt2 = flt2.ToDecimal();
+        }
+        
+        if (flt1 == flt2) return false;
         
         // Compare digit by digit.
         var maxFracLength = Math.Max(flt1.FractionLength, flt2.FractionLength);
@@ -216,5 +232,62 @@ public readonly partial struct SFloat {
     
     public static SFloat operator *(int factor, SFloat flt) {
         return flt * factor;
+    }
+
+    public static SFloat operator *(SFloat flt1, SFloat flt2) {
+        // Handle zero multiplication
+        if (flt1 == Zero(flt1.Radix) || flt2 == Zero(flt2.Radix)) return Zero(flt1.Radix);
+
+        if (flt1.Radix != flt2.Radix) flt2 = flt2.ToRadix(flt1.Radix);
+        
+        // Always put the operand with fewer digits on the right side.
+        if (flt1.Digits.Length < flt2.Digits.Length) return flt2 * flt1;
+        
+        var product = Zero(flt1.Radix);
+        for (var i = flt2.Digits.Length - 1; i >= 0; i--) {
+            // For each digit of flt2, right to left:
+            //     Multiply flt1 by the digit;
+            //     Add 0's to the right to shift the product to the left
+            var stepProduct = NDigitsMultiplyOneDigit(
+                new SFloat(flt1.Digits, flt1.Radix, flt1.MaxFractionLength),
+                new SFloat(flt2.GetDigitAtAbs(i).ToString(), flt2.Radix, flt2.MaxFractionLength)
+                );
+            stepProduct = new SFloat(
+                stepProduct.Digits + new string('0', flt2.Digits.Length - i - 1),
+                flt1.Radix,
+                stepProduct.MaxFractionLength);
+            product += stepProduct;
+        }
+        
+        return product.Clone(floatPointIndex: product.Digits.Length - flt1.FractionLength - flt2.FractionLength - 1,
+                             isNegative: flt1.IsNegative != flt2.IsNegative);
+    }
+
+    private static SFloat NDigitsMultiplyOneDigit(SFloat nDigits, SFloat oneDigit) {
+        if (oneDigit.Digits.Length != 1) throw new ArgumentException("oneDigit must be a single digit.");
+        if (oneDigit.Radix != nDigits.Radix) throw new ArgumentException("Both operands must have the same radix.");
+        if (oneDigit == Zero(oneDigit.Radix)) return Zero(nDigits.Radix);
+        
+        var digits  = new List<char>();
+        var carry   = 0;
+        for (var i = nDigits.Digits.Length - 1; i >= 0; i--) {
+            var result = GetDigitValue(nDigits.GetDigitAtAbs(i)) * GetDigitValue(oneDigit.GetDigitAtAbs(0)) + carry;
+            carry = 0;
+            while (result >= nDigits.Radix) {
+                carry++;
+                result -= nDigits.Radix;
+            }
+            
+            digits.Insert(0, GetDigitChar(result));
+        }
+        if (carry != 0) digits.Insert(0, GetDigitChar(carry));
+
+        return new SFloat {
+            Digits            = new string(digits.ToArray()),
+            Radix             = nDigits.Radix,
+            IsNegative        = false,
+            FloatPointIndex   = digits.Count,
+            MaxFractionLength = nDigits.MaxFractionLength
+        };
     }
 }

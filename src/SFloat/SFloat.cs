@@ -174,6 +174,11 @@ public readonly partial struct SFloat : IEquatable<SFloat> {
         return -index > FractionLength ? '0' : Digits[IntegerLength - index - 1];
     }
 
+    public char GetDigitAtAbs(int index) {
+        if (index < 0 || index >= Digits.Length) return '0';
+        return Digits[index];
+    }
+
     public char[] GetDigitsIn(int? start = null, int? end = null) {
         start ??= IntegerLength - 1;
         end  ??= -FractionLength;

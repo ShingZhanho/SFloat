@@ -34,7 +34,8 @@ public static class SFloatExtension {
     }
 
     private static readonly int[] RADIX_PWR_OF_TWO = [2, 4, 8, 16, 32];  // Supported radix powers of two.
-                                                                      // Conversions to and from these radixes are handled by bit manipulation.
+                                                                         // Conversions to and from these radixes are
+                                                                         // handled by bit manipulation.
     
     public static SFloat ToRadix(this SFloat flt, int radix) {
         if (flt.Radix == radix) return flt;
