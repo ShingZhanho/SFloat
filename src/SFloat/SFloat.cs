@@ -105,6 +105,20 @@ public readonly partial struct SFloat : IEquatable<SFloat> {
         };
     }
 
+    internal static char[] GetBitsFromValue(int value, int radix) {
+        // Get the binary bits of the value.
+        // Returns an empty array if the value is invalid.
+        if (value < 0 || value >= radix) return [];
+        var noOfBits = (int) Math.Ceiling(Math.Log2(radix)); // Radix must be a power of two. Not checked for performance.
+        return Convert.ToString(value, 2).PadLeft(noOfBits, '0').ToCharArray();
+    }
+
+    internal static int GetValueFromBits(char[] bits) {
+        // Gets the value from the binary bits.
+        // Returns -1 if the value represented are not from 0 to 35.
+        return Convert.ToInt32(new string(bits), 2);
+    }
+
     private SFloat Clone(string? digits            = null,
                          int?    floatPointIndex   = null,
                          int?    radix             = null,
@@ -119,7 +133,19 @@ public readonly partial struct SFloat : IEquatable<SFloat> {
         };
     }
 
-    public static readonly SFloat Zero = new ("0");
+    public static readonly SFloat BinaryZero = new ("0", 2);
+    public static readonly SFloat OctalZero = new ("0", 8);
+    public static readonly SFloat DecimalZero = new ("0");
+    public static readonly SFloat HexadecimalZero = new ("0", 16);
+    public static SFloat Zero(int radix) {
+        return radix switch {
+            2 => BinaryZero,
+            8 => OctalZero,
+            10 => DecimalZero,
+            16 => HexadecimalZero,
+            _ => new SFloat("0", radix)
+        };
+    }
 
     public int FractionLength => Math.Min(Digits.Length - FloatPointIndex - 1, MaxFractionLength);
 
@@ -254,7 +280,7 @@ public readonly partial struct SFloat : IEquatable<SFloat> {
     /// </param>
     /// <returns>The SFloat representation of the extracted digit. 0 if index is out of range.</returns>
     public SFloat ExtractDigitAt(int index) {
-        var rtn = Zero;
+        var rtn = DecimalZero;
         return rtn.SetDigitAt(index, GetDigitValue(GetDigitAt(index)));
     }
 

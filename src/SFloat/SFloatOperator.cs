@@ -10,11 +10,11 @@ namespace SFloat;
 
 public readonly partial struct SFloat {
     public static bool operator true(SFloat flt) {
-        return flt != Zero;
+        return flt != DecimalZero;
     }
     
     public static bool operator false(SFloat flt) {
-        return flt == Zero;
+        return flt == DecimalZero;
     }
 
     public static SFloat operator -(SFloat flt) {
@@ -23,8 +23,8 @@ public readonly partial struct SFloat {
 
     public static SFloat operator +(SFloat flt1, SFloat flt2) {
         // Optimization: If one of the operands is zero, return the other operand.
-        if (flt1 == Zero) return flt2;
-        if (flt2 == Zero) return flt1;
+        if (flt1 == DecimalZero) return flt2;
+        if (flt2 == DecimalZero) return flt1;
         
         // Handle negative numbers. Two operands must be positive for addition.
         if (flt1.IsNegative && !flt2.IsNegative) return flt2 - -flt1;
@@ -211,8 +211,7 @@ public readonly partial struct SFloat {
         for (var i = 0; i < factor; i++) {
             result += flt;
         }
-
-        return result;
+        return result.Clone(isNegative: flt.IsNegative != factor < 0);
     }
     
     public static SFloat operator *(int factor, SFloat flt) {
