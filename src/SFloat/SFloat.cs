@@ -59,8 +59,8 @@ public struct SFloat {
         if (FloatPointIndex == -1) FloatPointIndex = Digits.Length - 1;
         
         // Remove leading zeros of integer part.
-        for (var i = 0; i < IntegerLength; i++) {
-            if (Digits[i] != '0' || IntegerLength == 1) break;
+        for (var i = 0; i <= FloatPointIndex; i++) {
+            if (Digits[0] != '0' || FloatPointIndex == 0) break;
             Digits = Digits[1..];
             FloatPointIndex--;
         }
@@ -284,10 +284,11 @@ public struct SFloat {
             flt2 = flt2.ToDecimal();
         }
         
+        // If two operands have different lengths, they are not equal.
+        if (flt1.Digits.Length != flt2.Digits.Length) return false;
+        
         // Compare digit by digit.
-        var maxFracLength = Math.Max(flt1.FractionLength, flt2.FractionLength);
-        var maxIntLength  = Math.Max(flt1.IntegerLength, flt2.IntegerLength);
-        for (var i = -maxFracLength; i < maxIntLength; i++) {
+        for (var i = -flt1.FractionLength; i < flt1.IntegerLength; i++) {
             if (flt1.GetDigitAt(i) != flt2.GetDigitAt(i)) return false;
         }
 
