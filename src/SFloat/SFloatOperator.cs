@@ -10,11 +10,11 @@ namespace SFloat;
 
 public readonly partial struct SFloat {
     public static bool operator true(SFloat flt) {
-        return flt != DecimalZero;
+        return !flt.IsZero;
     }
     
     public static bool operator false(SFloat flt) {
-        return flt == DecimalZero;
+        return flt.IsZero;
     }
 
     public static SFloat operator -(SFloat flt) {
@@ -23,8 +23,8 @@ public readonly partial struct SFloat {
 
     public static SFloat operator +(SFloat flt1, SFloat flt2) {
         // Optimization: If one of the operands is zero, return the other operand.
-        if (flt1 == DecimalZero) return flt2;
-        if (flt2 == DecimalZero) return flt1;
+        if (flt1.IsZero) return flt2;
+        if (flt2.IsZero) return flt1;
         
         // Handle negative numbers. Two operands must be positive for addition.
         if (flt1.IsNegative && !flt2.IsNegative) return flt2 - -flt1;
@@ -75,9 +75,9 @@ public readonly partial struct SFloat {
     
     public static SFloat operator -(SFloat flt1, SFloat flt2) {
         // Optimisation: if the first operand is zero, return the negation of the second operand.
-        if (flt1.Digits == "0") return -flt2;
+        if (flt1.IsZero) return -flt2;
         // if the second operand is zero, return the first operand.
-        if (flt2.Digits == "0") return flt1;
+        if (flt2.IsZero) return flt1;
         
         // Handle negative numbers. flt1 must be greater than flt2 for subtraction.
         // Both operands must be positive.
@@ -125,7 +125,7 @@ public readonly partial struct SFloat {
     
     public static bool operator >(SFloat flt1, SFloat flt2) {
         // Handle zero comparison
-        if (flt2 is {IntegerLength: 1, FractionLength: 0} && flt2.Digits[0] == '0') return !flt1.IsNegative;
+        if (flt2.IsZero) return !flt1.IsNegative;
         
         // Handle different signs.
         if (flt1.IsNegative && !flt2.IsNegative) return false;
@@ -161,8 +161,7 @@ public readonly partial struct SFloat {
         // Optimise for zero checking:
         //    If the Zero is on the right hand side, use a faster method without converting to decimal.
         //    Perform ordinary check if Zero is on the left hand side.
-        if (flt2 is { IntegerLength: 1, FractionLength: 0 } && flt2.GetDigitAt(0) == '0')
-            return flt1 is { IntegerLength: 1, FractionLength: 0 } && flt1.GetDigitAt(0) == '0';
+        if (flt2.IsZero) return flt1.IsZero;
         
         // Handle different signs.
         if (flt1.IsNegative != flt2.IsNegative) return false;
@@ -190,7 +189,7 @@ public readonly partial struct SFloat {
     
     public static bool operator <(SFloat flt1, SFloat flt2) {
         // Handle zero comparison
-        if (flt2 is {IntegerLength: 1, FractionLength: 0} && flt1.Digits[0] == '0') return flt2.IsNegative;
+        if (flt2.IsZero) return flt2.IsNegative;
         
         // Handle different signs.
         if (flt1.IsNegative && !flt2.IsNegative) return true;
@@ -236,7 +235,7 @@ public readonly partial struct SFloat {
 
     public static SFloat operator *(SFloat flt1, SFloat flt2) {
         // Handle zero multiplication
-        if (flt1 == Zero(flt1.Radix) || flt2 == Zero(flt2.Radix)) return Zero(flt1.Radix);
+        if (flt1.IsZero || flt2.IsZero) return Zero(flt1.Radix);
 
         if (flt1.Radix != flt2.Radix) flt2 = flt2.ToRadix(flt1.Radix);
         
@@ -266,7 +265,7 @@ public readonly partial struct SFloat {
     private static SFloat NDigitsMultiplyOneDigit(SFloat nDigits, SFloat oneDigit) {
         if (oneDigit.Digits.Length != 1) throw new ArgumentException("oneDigit must be a single digit.");
         if (oneDigit.Radix != nDigits.Radix) throw new ArgumentException("Both operands must have the same radix.");
-        if (oneDigit == Zero(oneDigit.Radix)) return Zero(nDigits.Radix);
+        if (oneDigit.IsZero) return Zero(nDigits.Radix);
         
         var digits  = new List<char>();
         var carry   = 0;
@@ -289,5 +288,14 @@ public readonly partial struct SFloat {
             FloatPointIndex   = digits.Count,
             MaxFractionLength = nDigits.MaxFractionLength
         };
+    }
+
+    public static SFloat operator /(SFloat dividend, SFloat divisor) {
+        if (divisor.IsZero) throw new DivideByZeroException("Divisor cannot be zero.");
+        if (dividend.IsZero) return dividend;
+        
+        if (dividend.Radix != divisor.Radix) divisor = divisor.ToRadix(dividend.Radix);
+
+        return dividend; // temporary TODO: implement
     }
 }

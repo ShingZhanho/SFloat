@@ -152,6 +152,20 @@ public readonly partial struct SFloat : IEquatable<SFloat> {
     public int IntegerLength => FloatPointIndex + 1;
     
     public bool IsInteger => FractionLength == 0;
+    
+    public bool IsZero => Digits == "0";
+
+    public bool IsFractional => !IsInteger;
+
+    public SFloat IntegerPart => Clone(
+        digits: new string(GetDigitsIn(end: 0)),
+        floatPointIndex: IntegerLength - 1
+    );
+
+    public SFloat FractionalPart => Clone(
+        digits: "0" + new string(GetDigitsIn(start: -1)),
+        floatPointIndex: 0
+    );
 
     private static readonly char[] ZeroChar = ['0'];
 
@@ -212,9 +226,6 @@ public readonly partial struct SFloat : IEquatable<SFloat> {
             throw new ArgumentOutOfRangeException(nameof(value),
                 "The value must be in the range of 0 to the maximally supported value by the radix.");
         var c = GetDigitChar(value);
-        if (c == '\0')
-            throw new ArgumentOutOfRangeException(nameof(value),
-                "The value must be in the range of 0 to the maximally supported value by the radix.");
 
         var digits          = Digits.ToCharArray();
         var floatPointIndex = FloatPointIndex;

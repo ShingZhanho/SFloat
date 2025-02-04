@@ -61,7 +61,7 @@ public static class SFloatExtension {
             intPart += SFloat.GetDigitChar(SFloat.GetValueFromBits(intBits[(i * toPower)..(i * toPower + toPower)].ToArray()));
         var str = intPart;
         
-        if (flt.FractionLength != 0) {
+        if (flt.IsFractional) {
             var fracBits = new List<char>();
             foreach (var digit in flt.GetFractionalDigits()) 
                 fracBits.AddRange(SFloat.GetBitsFromValue(SFloat.GetDigitValue(digit), flt.Radix));
