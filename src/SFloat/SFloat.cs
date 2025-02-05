@@ -57,7 +57,8 @@ public readonly partial struct SFloat : IEquatable<SFloat> {
         if (FloatPointIndex == -1) FloatPointIndex = Digits.Length - 1;
         
         // Remove leading zeros of integer part.
-        for (var i = 0; i <= FloatPointIndex; i++) {
+        var temp = IntegerLength;
+        for (var i = 0; i < temp; i++) {
             if (Digits[0] != '0' || FloatPointIndex == 0) break;
             Digits = Digits[1..];
             FloatPointIndex--;
