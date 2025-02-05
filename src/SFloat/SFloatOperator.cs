@@ -113,14 +113,15 @@ public readonly partial struct SFloat {
             }
             result.Insert(0, GetDigitChar(diff));
         }
+        
+        result.Insert(maxIntLength, '.');
 
-        return new SFloat {
-            Digits            = new string(result.ToArray()),
-            FloatPointIndex   = maxIntLength - 1,
-            Radix             = flt1.Radix,
-            IsNegative        = false,
-            MaxFractionLength = Math.Max(flt1.MaxFractionLength, flt2.MaxFractionLength)
-        };
+        return new SFloat(new string(result.ToArray()), flt1.Radix,
+            Math.Max(flt1.MaxFractionLength, flt2.MaxFractionLength));
+    }
+    
+    public static SFloat operator --(SFloat flt) {
+        return flt - One(flt.Radix);
     }
     
     public static bool operator >(SFloat flt1, SFloat flt2) {
