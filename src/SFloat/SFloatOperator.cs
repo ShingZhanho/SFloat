@@ -149,10 +149,12 @@ public readonly partial struct SFloat {
         var maxIntLength  = Math.Max(flt1.IntegerLength, flt2.IntegerLength);
         for (var i = maxIntLength - 1; i >= 0; i--) { // Integer part
             if (GetDigitValue(flt1.GetDigitAt(i)) < GetDigitValue(flt2.GetDigitAt(i))) return false;
+            if (GetDigitValue(flt1.GetDigitAt(i)) > GetDigitValue(flt2.GetDigitAt(i))) return true;
         }
 
         for (var i = 1; i <= maxFracLength; i++) { // Fractional part
             if (GetDigitValue(flt1.GetDigitAt(-i)) < GetDigitValue(flt2.GetDigitAt(-i))) return false;
+            if (GetDigitValue(flt1.GetDigitAt(-i)) > GetDigitValue(flt2.GetDigitAt(-i))) return true;
         }
         
         return true;
@@ -213,10 +215,12 @@ public readonly partial struct SFloat {
         var maxIntLength  = Math.Max(flt1.IntegerLength, flt2.IntegerLength);
         for (var i = maxIntLength - 1; i >= 0; i--) { // Integer part
             if (GetDigitValue(flt1.GetDigitAt(i)) > GetDigitValue(flt2.GetDigitAt(i))) return false;
+            if (GetDigitValue(flt1.GetDigitAt(i)) < GetDigitValue(flt2.GetDigitAt(i))) return true;
         }
 
         for (var i = 1; i <= maxFracLength; i++) { // Fractional part
             if (GetDigitValue(flt1.GetDigitAt(-i)) > GetDigitValue(flt2.GetDigitAt(-i))) return false;
+            if (GetDigitValue(flt1.GetDigitAt(-i)) < GetDigitValue(flt2.GetDigitAt(-i))) return true;
         }
         
         return true;
