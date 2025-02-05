@@ -54,6 +54,21 @@ public class ArithmeticOperationsTests {
         // Assert
         Assert.Equal(expected, result.ToString());
     }
+
+    [Theory]
+    [InlineData("25", 10, "5", 10, "5")]
+    [InlineData("8", 16, "8", 16, "1")]
+    public void DivisionTest(string numA, int radixA, string numB, int radixB, string expected) {
+        // Arrange
+        var a = new SFloat(numA, radixA);
+        var b = new SFloat(numB, radixB);
+        
+        // Act
+        var result = a / b;
+        
+        // Assert
+        Assert.Equal(expected, result.ToString());
+    }
     
     [Theory]
     [InlineData("20.500", 10, "0020.5", 10)]

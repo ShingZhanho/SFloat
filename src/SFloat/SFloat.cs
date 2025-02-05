@@ -119,6 +119,12 @@ public readonly partial struct SFloat : IEquatable<SFloat> {
         return Convert.ToInt32(new string(bits), 2);
     }
 
+    /// <summary>
+    /// Clones this SFloat with the specified properties. Other properties are copied from this SFloat.
+    /// ***!! WARNING !!*** This method bypasses the truncation of leading and trailing zeros.
+    /// This may break some functionalities.
+    /// If you are to specify the digits, the leading and trailing zeros must be truncated manually.
+    /// </summary>
     private SFloat Clone(string? digits            = null,
                          int?    floatPointIndex   = null,
                          int?    radix             = null,
@@ -144,6 +150,20 @@ public readonly partial struct SFloat : IEquatable<SFloat> {
             10 => DecimalZero,
             16 => HexadecimalZero,
             _ => new SFloat("0", radix)
+        };
+    }
+    
+    public static readonly SFloat BinaryOne = new ("1", 2);
+    public static readonly SFloat OctalOne = new ("1", 8);
+    public static readonly SFloat DecimalOne = new ("1");
+    public static readonly SFloat HexadecimalOne = new ("1", 16);
+    public static SFloat One(int radix) {
+        return radix switch {
+            2 => BinaryOne,
+            8 => OctalOne,
+            10 => DecimalOne,
+            16 => HexadecimalOne,
+            _ => new SFloat("1", radix)
         };
     }
 
@@ -298,6 +318,27 @@ public readonly partial struct SFloat : IEquatable<SFloat> {
     public SFloat ExtractDigitAt(int index) {
         var rtn = DecimalZero;
         return rtn.SetDigitAt(index, GetDigitValue(GetDigitAt(index)));
+    }
+
+    /// <summary>
+    /// Moves the float point to the left or right by the specified shift.
+    /// </summary>
+    /// <param name="shift">
+    /// The shift amount. Positive value makes the absolute value of the SFloat greater (moves to the right),
+    /// negative value makes the absolute value of the SFloat smaller (moves to the left).
+    /// </param>
+    /// <returns>The SFloat with its float point moved.</returns>
+    public SFloat MoveFloatPoint(int shift) {
+        var newFloatPointIndex = FloatPointIndex + shift;
+        var newDigits          = Digits;
+
+        if (newFloatPointIndex < 0) {
+            newDigits = new string('0', -newFloatPointIndex) + Digits;
+            newFloatPointIndex = 0;
+        }
+        if (newFloatPointIndex >= Digits.Length) newDigits = Digits + new string('0', newFloatPointIndex - Digits.Length + 1);
+
+        return Clone(digits: newDigits, floatPointIndex: newFloatPointIndex);
     }
 
     public static bool TryParse(string s, out SFloat? result, int? radix = null) {

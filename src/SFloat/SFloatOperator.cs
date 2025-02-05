@@ -72,6 +72,10 @@ public readonly partial struct SFloat {
     public static SFloat operator +(decimal flt1, SFloat flt2) {
         return new SFloat(flt1.ToString(CultureInfo.InvariantCulture)) + flt2;
     }
+
+    public static SFloat operator ++(SFloat flt) {
+        return flt + One(flt.Radix);
+    }
     
     public static SFloat operator -(SFloat flt1, SFloat flt2) {
         // Optimisation: if the first operand is zero, return the negation of the second operand.
@@ -297,6 +301,74 @@ public readonly partial struct SFloat {
         
         if (dividend.Radix != divisor.Radix) divisor = divisor.ToRadix(dividend.Radix);
 
-        return dividend; // temporary TODO: implement
+        // guarantee that both the dividend and the divisor are integers
+        var shiftFactor = Math.Max(dividend.FractionLength, divisor.FractionLength);
+        dividend = dividend.MoveFloatPoint(shiftFactor);
+        divisor  = divisor.MoveFloatPoint(shiftFactor);
+
+        var quotientDigits     = new List<char>();
+        var dividendDigits     = new List<char>(dividend.Digits);
+        var stepDividendDigits = new List<char>();
+        
+        // Perform long division
+
+        var sigEnd = false;
+        while (true) {
+            SFloat stepDividend;
+            do {
+                stepDividendDigits.Add(dividendDigits.Pop(0));
+                quotientDigits.Add('0');
+                if (dividendDigits.Count == 0) dividendDigits.Add('0');
+                // check if all digits in stepDividend are zero
+                if (stepDividendDigits.All(d => d == '0')) {
+                    quotientDigits.Pop(); // undo the last addition
+                    sigEnd = true;
+                    break;
+                }
+                stepDividend = new SFloat(
+                    new string(stepDividendDigits.ToArray()),
+                    dividend.Radix,
+                    dividend.MaxFractionLength
+                );
+            } while (stepDividend < divisor); // continue until stepDividend >= divisor
+            stepDividend = new SFloat( // repeated assignment to solve compiler "use before initialization" error;
+                                       // optimization is needed
+                new string(stepDividendDigits.ToArray()),
+                dividend.Radix,
+                dividend.MaxFractionLength
+            );
+            
+            if (sigEnd) break;
+            
+            // find the quotient (guaranteed to be between 1 and radix)
+            var stepQuotient = 0;
+            var stepProduct  = Zero(dividend.Radix);
+            while (true) {
+                stepQuotient++;
+                stepProduct += divisor;
+                if (stepProduct <= stepDividend) continue;
+                stepQuotient--;
+                stepProduct -= divisor;
+                break;
+            }
+            // set the last digit of the quotient to be the digit of the stepQuotient
+            quotientDigits[^1] = GetDigitChar(stepQuotient);
+            // check if the quotient has reached the maximum fraction length
+            if (quotientDigits.Count - dividend.IntegerLength >= dividend.MaxFractionLength) break;
+            // set stepDividend as the remainder
+            stepDividendDigits = new List<char>((stepDividend - stepProduct).GetDigitsIn(null, null));
+        }
+
+        // insert float point
+        quotientDigits.Insert(dividend.IntegerLength, '.');
+        
+        // insert negative sign if necessary
+        if (dividend.IsNegative != divisor.IsNegative) quotientDigits.Insert(0, '-');
+        
+        return new SFloat(
+            new string(quotientDigits.ToArray()),
+            dividend.Radix,
+            dividend.MaxFractionLength
+        );
     }
 }
