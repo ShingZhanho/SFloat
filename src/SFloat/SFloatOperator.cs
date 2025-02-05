@@ -268,7 +268,8 @@ public readonly partial struct SFloat {
         }
         
         return product.Clone(floatPointIndex: product.Digits.Length - flt1.FractionLength - flt2.FractionLength - 1,
-                             isNegative: flt1.IsNegative != flt2.IsNegative);
+                             isNegative: flt1.IsNegative != flt2.IsNegative)
+                      .EnsureZeroTruncation();
     }
 
     private static SFloat NDigitsMultiplyOneDigit(SFloat nDigits, SFloat oneDigit) {
@@ -374,5 +375,18 @@ public readonly partial struct SFloat {
             dividend.Radix,
             dividend.MaxFractionLength
         );
+    }
+
+    /// <summary>
+    /// Returns the signed remainder of the division of two SFloat numbers.
+    /// </summary>
+    public static SFloat operator %(SFloat dividend, SFloat divisor) {
+        return (dividend / divisor).FractionalPart * divisor;
+    }
+
+    public static (SFloat, SFloat) DivRem(SFloat dividend, SFloat divisor) {
+        var quotient = dividend / divisor;
+        var remainder = quotient.FractionalPart * divisor;
+        return (quotient.IntegerPart, remainder);
     }
 }

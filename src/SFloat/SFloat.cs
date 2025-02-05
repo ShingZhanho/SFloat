@@ -126,6 +126,9 @@ public readonly partial struct SFloat : IEquatable<SFloat> {
     /// This may break some functionalities.
     /// If you are to specify the digits, the leading and trailing zeros must be truncated manually.
     /// </summary>
+    /// <remarks>
+    /// Use <see cref="EnsureZeroTruncation"/> to ensure the cloned SFloat has proper truncations.
+    /// </remarks>
     private SFloat Clone(string? digits            = null,
                          int?    floatPointIndex   = null,
                          int?    radix             = null,
@@ -138,6 +141,10 @@ public readonly partial struct SFloat : IEquatable<SFloat> {
             IsNegative        = isNegative ?? IsNegative,
             MaxFractionLength = maxFractionLength ?? MaxFractionLength
         };
+    }
+
+    internal SFloat EnsureZeroTruncation() {
+        return new SFloat(ToString(), Radix, MaxFractionLength);
     }
 
     public static readonly SFloat BinaryZero = new ("0", 2);

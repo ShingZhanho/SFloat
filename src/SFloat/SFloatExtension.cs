@@ -81,6 +81,34 @@ public static class SFloatExtension {
     }
     
     private static SFloat DecimalToRadix(SFloat flt, int radix) {
-        return flt; // temporary TODO: implement
+        var    unitRadix       = new SFloat(radix.ToString(), maxFractionLength: flt.MaxFractionLength);
+        var    convertedDigits = new List<char>();
+        var    quotient        = flt.IntegerPart;
+
+        do {
+            (quotient, var remainder) = SFloat.DivRem(quotient, unitRadix);
+            convertedDigits.Insert(0, remainder.GetDigitAt(0));
+        } while (quotient != SFloat.DecimalZero);
+        var str = new string(convertedDigits.ToArray());
+
+        if (flt.IsFractional) {
+            str += ".";
+            convertedDigits.Clear();
+            var maxIterations = flt.MaxFractionLength;
+            var product = flt.FractionalPart;
+
+            while (maxIterations-- > 0) {
+                product *= unitRadix;
+                convertedDigits.Add(product.GetDigitAt(0));
+                product = product.FractionalPart;
+                if (product == SFloat.DecimalZero) break;
+            }
+            
+            str += new string(convertedDigits.ToArray());
+        }
+        
+        if (flt.IsNegative) str = $"-{str}";
+        
+        return new SFloat(str, radix, flt.MaxFractionLength);
     }
 }

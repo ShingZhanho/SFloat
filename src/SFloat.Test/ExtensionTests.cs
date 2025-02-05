@@ -31,4 +31,18 @@ public class ExtensionTests {
         // Assert
         Assert.Equal(expected, result.ToString());
     }
+
+    [Theory]
+    [InlineData("11", 2, "1011")]
+    [InlineData("-19.7421875", 8, "-23.574")]
+    public void DecimalToRadixConversionTest(SFloat from, int toRadix, string expected) {
+        // Arrange
+        ;
+        
+        // Act
+        var result = from.ToRadix(toRadix);
+        
+        // Assert
+        Assert.Equal(expected, result.ToString());
+    }
 }
