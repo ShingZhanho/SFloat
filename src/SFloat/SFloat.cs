@@ -144,7 +144,7 @@ public readonly partial struct SFloat : IEquatable<SFloat> {
     public static readonly SFloat OctalZero = new ("0", 8);
     public static readonly SFloat DecimalZero = new ("0");
     public static readonly SFloat HexadecimalZero = new ("0", 16);
-    public static SFloat Zero(int radix) {
+    public static SFloat Zero(int radix = 10) {
         return radix switch {
             2 => BinaryZero,
             8 => OctalZero,
@@ -158,7 +158,7 @@ public readonly partial struct SFloat : IEquatable<SFloat> {
     public static readonly SFloat OctalOne = new ("1", 8);
     public static readonly SFloat DecimalOne = new ("1");
     public static readonly SFloat HexadecimalOne = new ("1", 16);
-    public static SFloat One(int radix) {
+    public static SFloat One(int radix = 10) {
         return radix switch {
             2 => BinaryOne,
             8 => OctalOne,

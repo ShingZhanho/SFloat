@@ -13,15 +13,19 @@ public static class SFloatExtension {
         
         var intDigits  = flt.GetIntegerDigits();
         var intProduct = SFloat.DecimalZero;
-        for (var i = 0; i < intDigits.Length - 1; i++) {
+        for (var i = 0; i < intDigits.Length - 1; i++) { // more than one digit
             intProduct += SFloat.GetDigitValue(intDigits[i]) * flt.Radix + SFloat.GetDigitValue(intDigits[i + 1]);
         }
+        if (intDigits.Length == 1)  // only one digit
+            intProduct = SFloat.GetDigitValue(intDigits[0]);
 
         var fracDigits  = flt.GetFractionalDigits();
         var fracProduct = SFloat.DecimalZero;
-        for (var i = 0; i < fracDigits.Length - 1; i++) {
+        for (var i = 0; i < fracDigits.Length - 1; i++) { // more than one digit
             fracProduct += SFloat.GetDigitValue(fracDigits[i]) * flt.Radix + SFloat.GetDigitValue(fracDigits[i + 1]);
         }
+        if (fracDigits.Length == 1)  // only one digit
+            fracProduct = SFloat.GetDigitValue(fracDigits[0]);
 
         var str = $"{intProduct}";
         if (fracProduct != SFloat.DecimalZero) {

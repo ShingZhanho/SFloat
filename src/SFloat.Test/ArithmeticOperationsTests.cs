@@ -58,6 +58,10 @@ public class ArithmeticOperationsTests {
     [Theory]
     [InlineData("25", 10, "5", 10, "5")]
     [InlineData("8", 16, "8", 16, "1")]
+    [InlineData("125", 10, "2", 10, "62.5")]
+    [InlineData("1", 10, "3", 10, "0.33333333333333333333333333333333")] // 32 decimal places
+    [InlineData("3.1415926535", 10, "10.111", 10, "0.3107103801305508851745623578281")]
+    // [InlineData("58.125", 10, "12.5", 16, "3.1740614334")]
     public void DivisionTest(string numA, int radixA, string numB, int radixB, string expected) {
         // Arrange
         var a = new SFloat(numA, radixA);
