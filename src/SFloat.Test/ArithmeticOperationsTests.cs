@@ -42,7 +42,7 @@ public class ArithmeticOperationsTests {
     [InlineData("23.4", 10, "36.7", 10, "858.78")]
     [InlineData("3A.2", 16, "12.5", 16, "428.6A")]
     [InlineData("0.00", 10, "19.27", 10, "0")]
-    // [InlineData("10.101", 2, "18", 10, "101101")] TODO: Implement conversion to any radix
+    [InlineData("10.1", 2, "18", 10, "101101")]
     public void Multiplication_SFloatSFloat_Test(string numA, int radixA, string numB, int radixB, string expected) {
         // Arrange
         var a = new SFloat(numA, radixA);
@@ -61,7 +61,7 @@ public class ArithmeticOperationsTests {
     [InlineData("125", 10, "2", 10, "62.5")]
     [InlineData("1", 10, "3", 10, "0.33333333333333333333333333333333")] // 32 decimal places
     [InlineData("3.1415926535", 10, "10.111", 10, "0.3107103801305508851745623578281")]
-    // [InlineData("58.125", 10, "12.5", 16, "3.1740614334")]
+    [InlineData("58.125", 10, "0.8", 16, "116.25")]
     public void DivisionTest(string numA, int radixA, string numB, int radixB, string expected) {
         // Arrange
         var a = new SFloat(numA, radixA);

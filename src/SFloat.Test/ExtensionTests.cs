@@ -4,8 +4,9 @@ public class ExtensionTests {
     [Theory]
     [InlineData("F", 16, "15")]
     [InlineData("FF", 16, "255")]
-    [InlineData("FF.33", 16, "255.51")]
-    [InlineData("-7.3", 8, "-7.3")]
+    [InlineData("FF.33", 16, "255.19921875")]
+    [InlineData("-7.3", 8, "-7.375")]
+    [InlineData("12.5", 16, "18.3125")]
     public void ToDecimalTest(string num, int radix, string expected) {
         // Arrange
         var flt = new SFloat(num, radix);

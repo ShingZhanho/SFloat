@@ -19,17 +19,19 @@ public static class SFloatExtension {
         if (intDigits.Length == 1)  // only one digit
             intProduct = SFloat.GetDigitValue(intDigits[0]);
 
-        var fracDigits  = flt.GetFractionalDigits();
         var fracProduct = SFloat.DecimalZero;
-        for (var i = 0; i < fracDigits.Length - 1; i++) { // more than one digit
-            fracProduct += SFloat.GetDigitValue(fracDigits[i]) * flt.Radix + SFloat.GetDigitValue(fracDigits[i + 1]);
+        if (flt.IsFractional) {
+            var fracDigits  = flt.GetFractionalDigits();
+            for (var i = fracDigits.Length - 1; i >= 0; i--) {
+                fracProduct = fracProduct / flt.Radix +
+                               SFloat.GetDigitValue(fracDigits[i]);
+            }
+            fracProduct /= flt.Radix;
         }
-        if (fracDigits.Length == 1)  // only one digit
-            fracProduct = SFloat.GetDigitValue(fracDigits[0]);
 
         var str = $"{intProduct}";
         if (fracProduct != SFloat.DecimalZero) {
-            str += $".{fracProduct}";
+            str += $".{new string(fracProduct.GetFractionalDigits())}";
         }
         if (flt.IsNegative) {
             str = $"-{str}";
