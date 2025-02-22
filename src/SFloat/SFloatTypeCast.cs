@@ -4,7 +4,7 @@
  * This file is part of the SFloat struct. All the implicit and explicit type conversions are defined in this file.
  */
 
-namespace SFloat;
+namespace JacobS.SFloat;
 
 public readonly partial struct SFloat {
     public static implicit operator SFloat(string s) => new (s);

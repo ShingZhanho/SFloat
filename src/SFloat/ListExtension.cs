@@ -1,4 +1,4 @@
-namespace SFloat;
+namespace JacobS.SFloat;
 
 internal static class ListExtension {
     public static T Pop<T>(this List<T> list, int? index = null) {

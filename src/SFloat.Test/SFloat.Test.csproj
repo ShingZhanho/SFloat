@@ -7,6 +7,8 @@
 
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
+        <AssemblyName>JacobS.SFloat.Test</AssemblyName>
+        <RootNamespace>JacobS.SFloat.Test</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>

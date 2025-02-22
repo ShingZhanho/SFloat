@@ -1,4 +1,4 @@
-﻿namespace SFloat;
+﻿namespace JacobS.SFloat;
 
 /// <summary>
 /// A float value that is string-based.

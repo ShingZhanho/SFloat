@@ -1,4 +1,4 @@
-namespace SFloat;
+namespace JacobS.SFloat;
 
 public static class SFloatExtension {
     

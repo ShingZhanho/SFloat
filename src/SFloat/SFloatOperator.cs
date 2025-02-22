@@ -6,7 +6,7 @@
 
 using System.Globalization;
 
-namespace SFloat;
+namespace JacobS.SFloat;
 
 public readonly partial struct SFloat {
     public static bool operator true(SFloat flt) {
