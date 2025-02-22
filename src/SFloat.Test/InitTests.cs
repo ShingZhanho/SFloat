@@ -7,10 +7,10 @@ public class InitTests {
     [InlineData("0.33333333", 10, "0.33", 2)]
     public void InitFromStringTest(string source, int radix, string expected, int? maxFracLength = null) {
         // Arrange
-        maxFracLength ??= JacobS.SFloat.SFloat.MAX_DEFAULT_FRAC_LENGTH;
+        maxFracLength ??= SFloat.DEFAULT_MAX_FRAC_LENGTH();
         
         // Act
-        var flt = new JacobS.SFloat.SFloat(source, radix, maxFracLength);
+        var flt = new SFloat(source, radix, maxFracLength);
         
         // Assert
         Assert.Equal(expected, flt.ToString());

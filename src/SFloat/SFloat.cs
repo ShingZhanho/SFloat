@@ -12,14 +12,14 @@ public readonly partial struct SFloat : IEquatable<SFloat> {
     /// The radix (base) to interpret the digits. The valid range is 2 to 36. Default is 10.
     /// </param>
     /// <param name="maxFractionLength">
-    /// The maximum length of the fractional part. Default is <see cref="MAX_DEFAULT_FRAC_LENGTH"/>.
+    /// The maximum length of the fractional part. Default is <see cref="DEFAULT_MAX_FRAC_LENGTH"/>.
     /// The value must not be negative and must not exceed <see cref="MAX_SUPPORTED_FRAC_LENGTH"/>.
     /// </param>
     public SFloat(string value, int? radix = null, int? maxFractionLength = null) {
         radix ??= 10;
         if (radix < 2 || radix > 36) 
             throw new ArgumentOutOfRangeException(nameof(radix), "The radix must be in the range of 2 to 36.");
-        maxFractionLength ??= MAX_DEFAULT_FRAC_LENGTH;
+        maxFractionLength ??= DEFAULT_MAX_FRAC_LENGTH();
         if (maxFractionLength < 0 || maxFractionLength > MAX_SUPPORTED_FRAC_LENGTH)
             throw new ArgumentOutOfRangeException(nameof(maxFractionLength),
                 $"The maximum fraction length must be in the range of 0 to {MAX_SUPPORTED_FRAC_LENGTH}.");
@@ -83,7 +83,16 @@ public readonly partial struct SFloat : IEquatable<SFloat> {
     internal int MaxFractionLength { get; init; }
 
     public const int MAX_SUPPORTED_FRAC_LENGTH = 1073741823;    // The maximum length of the fractional part.
-    public const int MAX_DEFAULT_FRAC_LENGTH = 128;             // The default maximum length of the fractional part.
+    public const int MAX_LIB_DEFAULT_FRAC_LENGTH = 128;         // The library's default maximum length of the fractional part.
+
+    public static int DEFAULT_MAX_FRAC_LENGTH() {
+        var max     = MAX_LIB_DEFAULT_FRAC_LENGTH;
+        if (int.TryParse(Environment.GetEnvironmentVariable(ENV_MAX_FRAC_LENGTH), out var envMax))
+            max = envMax;
+        return max;
+    }
+
+    private const string ENV_MAX_FRAC_LENGTH = "SFLOAT_MaxFracLength";
     
     internal static int GetDigitValue(char digit) {
         // Get the value of the digit. Maximum supported radix: 36.

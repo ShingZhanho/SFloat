@@ -9,7 +9,7 @@ public class ExtensionTests {
     [InlineData("12.5", 16, "18.3125")]
     public void ToDecimalTest(string num, int radix, string expected) {
         // Arrange
-        var flt = new JacobS.SFloat.SFloat(num, radix);
+        var flt = new SFloat(num, radix);
         
         // Act
         var result = flt.ToDecimal();
@@ -24,7 +24,7 @@ public class ExtensionTests {
     [InlineData("-127.35", 8, 16, "-57.74")]
     public void PowerOfTwoConversionTest(string fromNum, int fromRadix, int toRadix, string expected) {
         // Arrange
-        var flt = new JacobS.SFloat.SFloat(fromNum, fromRadix);
+        var flt = new SFloat(fromNum, fromRadix);
         
         // Act
         var result = flt.ToRadix(toRadix);
@@ -39,7 +39,7 @@ public class ExtensionTests {
     [InlineData("0.25", 2, "0.01")] // Issue #1
     [InlineData("1654", 16, "676")]
     [InlineData("156.75", 16, "9C.C")]
-    public void DecimalToRadixConversionTest(JacobS.SFloat.SFloat from, int toRadix, string expected) {
+    public void DecimalToRadixConversionTest(SFloat from, int toRadix, string expected) {
         // Arrange
         ;
         
