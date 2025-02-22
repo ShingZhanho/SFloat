@@ -18,7 +18,7 @@ public readonly partial struct SFloat {
     }
 
     public static SFloat operator -(SFloat flt) {
-        return flt.Clone(isNegative: !flt.IsNegative);
+        return flt.Clone(isNegative: !flt.IsNegative).EnsureZeroTruncation();
     }
 
     public static SFloat operator +(SFloat flt1, SFloat flt2) {
@@ -196,7 +196,7 @@ public readonly partial struct SFloat {
     
     public static bool operator <(SFloat flt1, SFloat flt2) {
         // Handle zero comparison
-        if (flt2.IsZero) return flt2.IsNegative;
+        if (flt2.IsZero) return flt1.IsNegative;
         
         // Handle different signs.
         if (flt1.IsNegative && !flt2.IsNegative) return true;
@@ -235,7 +235,7 @@ public readonly partial struct SFloat {
         for (var i = 0; i < factor; i++) {
             result += flt;
         }
-        return result.Clone(isNegative: flt.IsNegative != factor < 0);
+        return result.Clone(isNegative: flt.IsNegative != factor < 0).EnsureZeroTruncation();
     }
     
     public static SFloat operator *(int factor, SFloat flt) {
