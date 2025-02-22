@@ -231,6 +231,9 @@ public readonly partial struct SFloat {
     }
 
     public static SFloat operator *(SFloat flt, int factor) {
+        if (factor == 0) return Zero(flt.Radix);
+        if (factor == 1) return flt;
+        if (factor < 0) return -(flt * -factor);
         var result = flt;
         for (var i = 0; i < factor; i++) {
             result += flt;
@@ -256,10 +259,9 @@ public readonly partial struct SFloat {
             // For each digit of flt2, right to left:
             //     Multiply flt1 by the digit;
             //     Add 0's to the right to shift the product to the left
-            var stepProduct = NDigitsMultiplyOneDigit(
-                new SFloat(flt1.Digits, flt1.Radix, flt1.MaxFractionLength),
-                new SFloat(flt2.GetDigitAtAbs(i).ToString(), flt2.Radix, flt2.MaxFractionLength)
-                );
+            var stepDigit = new SFloat(flt2.GetDigitAtAbs(i).ToString(), flt2.Radix, flt2.MaxFractionLength);
+            if (stepDigit.IsZero) continue; // Skip if the digit is zero
+            var stepProduct = NDigitsMultiplyOneDigit(new SFloat(flt1.Digits, flt1.Radix, flt1.MaxFractionLength), stepDigit);
             stepProduct = new SFloat(
                 stepProduct.Digits + new string('0', flt2.Digits.Length - i - 1),
                 flt1.Radix,

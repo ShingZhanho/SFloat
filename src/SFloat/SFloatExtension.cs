@@ -115,4 +115,9 @@ public static class SFloatExtension {
         
         return new SFloat(str, radix, flt.MaxFractionLength);
     }
+    
+    // Radix conversion shorthands
+    public static SFloat ToBinary(this SFloat flt) => flt.ToRadix(2);
+    public static SFloat ToOctal(this SFloat flt) => flt.ToRadix(8);
+    public static SFloat ToHexadecimal(this SFloat flt) => flt.ToRadix(16);
 }
