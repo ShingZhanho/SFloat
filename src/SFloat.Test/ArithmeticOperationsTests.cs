@@ -59,13 +59,13 @@ public class ArithmeticOperationsTests {
     [InlineData("25", 10, "5", 10, "5")]
     [InlineData("8", 16, "8", 16, "1")]
     [InlineData("125", 10, "2", 10, "62.5")]
-    [InlineData("1", 10, "3", 10, "0.33333333333333333333333333333333")] // 32 decimal places
-    [InlineData("3.1415926535", 10, "10.111", 10, "0.3107103801305508851745623578281")]
+    [InlineData("1", 10, "3", 10, "0.3333333333", 10)]
+    [InlineData("3.1415926535", 10, "10.111", 10, "0.3107103801305508851745623578281", 31)]
     [InlineData("58.125", 10, "0.8", 16, "116.25")]
-    public void DivisionTest(string numA, int radixA, string numB, int radixB, string expected) {
+    public void DivisionTest(string numA, int radixA, string numB, int radixB, string expected, int maxFracLength = SFloat.MAX_DEFAULT_FRAC_LENGTH) {
         // Arrange
-        var a = new SFloat(numA, radixA);
-        var b = new SFloat(numB, radixB);
+        var a = new SFloat(numA, radixA, maxFracLength);
+        var b = new SFloat(numB, radixB, maxFracLength);
         
         // Act
         var result = a / b;

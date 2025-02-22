@@ -83,7 +83,7 @@ public readonly partial struct SFloat : IEquatable<SFloat> {
     internal int MaxFractionLength { get; init; }
 
     public const int MAX_SUPPORTED_FRAC_LENGTH = 1073741823;    // The maximum length of the fractional part.
-    public const int MAX_DEFAULT_FRAC_LENGTH = 32;              // The default maximum length of the fractional part.
+    public const int MAX_DEFAULT_FRAC_LENGTH = 128;             // The default maximum length of the fractional part.
     
     internal static int GetDigitValue(char digit) {
         // Get the value of the digit. Maximum supported radix: 36.
