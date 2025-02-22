@@ -89,7 +89,8 @@ public static class SFloatExtension {
 
         do {
             (quotient, var remainder) = SFloat.DivRem(quotient, unitRadix);
-            convertedDigits.Insert(0, remainder.GetDigitAt(0));
+            if (remainder < 0) remainder = -remainder;
+            convertedDigits.Insert(0, SFloat.GetDigitChar(remainder));
         } while (quotient != SFloat.DecimalZero);
         var str = new string(convertedDigits.ToArray());
 
@@ -101,7 +102,8 @@ public static class SFloatExtension {
 
             while (maxIterations-- > 0) {
                 product *= unitRadix;
-                convertedDigits.Add(product.GetDigitAt(0));
+                if (product < 0) product = -product;
+                convertedDigits.Add(SFloat.GetDigitChar(product.IntegerPart));
                 product = product.FractionalPart;
                 if (product == SFloat.DecimalZero) break;
             }

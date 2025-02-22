@@ -37,6 +37,8 @@ public class ExtensionTests {
     [InlineData("11", 2, "1011")]
     [InlineData("-19.7421875", 8, "-23.574")]
     [InlineData("0.25", 2, "0.01")] // Issue #1
+    [InlineData("1654", 16, "676")]
+    [InlineData("156.75", 16, "9C.C")]
     public void DecimalToRadixConversionTest(JacobS.SFloat.SFloat from, int toRadix, string expected) {
         // Arrange
         ;

@@ -188,12 +188,12 @@ public readonly partial struct SFloat : IEquatable<SFloat> {
     public SFloat IntegerPart => Clone(
         digits: new string(GetDigitsIn(end: 0)),
         floatPointIndex: IntegerLength - 1
-    );
+    ).EnsureZeroTruncation();
 
     public SFloat FractionalPart => Clone(
         digits: "0" + new string(GetDigitsIn(start: -1)),
         floatPointIndex: 0
-    );
+    ).EnsureZeroTruncation();
 
     private static readonly char[] ZeroChar = ['0'];
 
