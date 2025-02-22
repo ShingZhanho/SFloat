@@ -267,8 +267,8 @@ public readonly partial struct SFloat {
             product += stepProduct;
         }
         
-        return product.Clone(floatPointIndex: product.Digits.Length - flt1.FractionLength - flt2.FractionLength - 1,
-                             isNegative: flt1.IsNegative != flt2.IsNegative)
+        return product.MoveFloatPoint(-(flt1.FractionLength + flt2.FractionLength))
+                      .Clone(isNegative: flt1.IsNegative != flt2.IsNegative)
                       .EnsureZeroTruncation();
     }
 
@@ -379,14 +379,28 @@ public readonly partial struct SFloat {
 
     /// <summary>
     /// Returns the signed remainder of the division of two SFloat numbers.
+    /// Modulo operation is limited to integers only. An InvalidOperationException is thrown if either the dividend or
+    /// the divisor is fractional.
     /// </summary>
     public static SFloat operator %(SFloat dividend, SFloat divisor) {
-        return (dividend / divisor).FractionalPart * divisor;
+        if (dividend.IsFractional || divisor.IsFractional) 
+            throw new InvalidOperationException("Modulo operation is limited to integers only.");
+        return DivRem(dividend, divisor).Remainder;
     }
 
-    public static (SFloat, SFloat) DivRem(SFloat dividend, SFloat divisor) {
-        var quotient = dividend / divisor;
-        var remainder = quotient.FractionalPart * divisor;
-        return (quotient.IntegerPart, remainder);
+    /// <summary>
+    /// Returns the quotient and remainder of the division of two SFloat numbers.
+    /// Limited to integers only. An InvalidOperationException is thrown if either the dividend or the divisor is
+    /// fractional.
+    /// </summary>
+    /// <returns>
+    /// A tuple containing the quotient and remainder of the division.
+    /// </returns>
+    public static (SFloat Quotient, SFloat Remainder) DivRem(SFloat dividend, SFloat divisor) {
+        if (dividend.IsFractional || divisor.IsFractional) 
+            throw new InvalidOperationException("Division is limited to integers only.");
+        var quotient  = (dividend / divisor).IntegerPart;
+        var remainder = dividend - quotient * divisor;
+        return (quotient, remainder);
     }
 }

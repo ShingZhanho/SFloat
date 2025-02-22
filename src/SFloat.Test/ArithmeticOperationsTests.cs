@@ -43,7 +43,8 @@ public class ArithmeticOperationsTests {
     [InlineData("3A.2", 16, "12.5", 16, "428.6A")]
     [InlineData("0.00", 10, "19.27", 10, "0")]
     [InlineData("10.1", 2, "18", 10, "101101")]
-    public void Multiplication_SFloatSFloat_Test(string numA, int radixA, string numB, int radixB, string expected) {
+    [InlineData("0.25", 10, "2", 10, "0.5")] // Issue #2
+    public void MultiplicationTest(string numA, int radixA, string numB, int radixB, string expected) {
         // Arrange
         var a = new SFloat(numA, radixA);
         var b = new SFloat(numB, radixB);

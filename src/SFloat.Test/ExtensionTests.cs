@@ -36,6 +36,7 @@ public class ExtensionTests {
     [Theory]
     [InlineData("11", 2, "1011")]
     [InlineData("-19.7421875", 8, "-23.574")]
+    [InlineData("0.25", 2, "0.01")] // Issue #1
     public void DecimalToRadixConversionTest(SFloat from, int toRadix, string expected) {
         // Arrange
         ;
